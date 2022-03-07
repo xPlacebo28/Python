@@ -134,9 +134,7 @@ pyplot.show()
 #  - Build multiple different models to predict species from flower measurements
 #  - Select the best model
 
-''' We need to know the model we create is good
-
-
+# We need to know the model we create is good
 
 # Split-out validation dataset
 array = dataset.values
@@ -144,19 +142,65 @@ X = array[:,0:4]
 y = array[:,4]
 X_train, X_validation, Y_train, Y_validation = train_test_split(X, y, test_size=0.20, random_state=1)
 
-'''
+# https://machinelearningmastery.com/index-slice-reshape-numpy-arrays-machine-learning-python/ 
 
 
+# Testing multiple algorithms
+#  - Logistic Regression (LR)
+#  - Linear Discriminant Analysis (LDA)
+#  - K-Nearest Neighbors (KNN)
+#  - Classificaiton and Regression Trees (CART)
+#  - Gaussian Naive Bayes (NB)
+#  - Support Vector Machines (SVM)
+
+# This is a good mixture of simplier linear (LR, LDA), nonlinear (KNN, CART,
+# NB, and SVM) algorithms
+
+# Now lets build and evaluate our models
+
+models = []
+models.append(('LR',LogisticRegression(solver='liblinear', multi_class='ovr')))
+models.append(('LDA',LinearDiscriminantAnalysis()))
+models.append(('KNN', KNeighborsClassifier()))
+models.append(('CART', DecisionTreeClassifier()))
+models.append(('NB',GaussianNB()))
+models.append(('SVM', SVC(gamma='auto')))
+
+# Evaluate each model in turn
+results=[]
+names =[]
+for name, model in models:
+    kfold = StratifiedKFold(n_splits=10,random_state=1, shuffle=True)
+    cv_results = cross_val_score(model,X_train,Y_train,cv=kfold,scoring='accuracy')
+    results.append(cv_results)
+    names.append(name)
+    print('%s: %f (%f)' % (name, cv_results.mean(), cv_results.std()))
+
+# A useful way to compare the samples of results of each algorithm is to 
+# create a box and whisker plot for each distribution and compare the 
+# distributions.
+
+# Compare Algorithms
+pyplot.boxplot(results, labels=names)
+pyplot.title('Algorithm Comparison')
+pyplot.show()
+
+#%% Predictions
+
+# We must now choose an algorithm to use to make our predictions
+# The previous section suggests SVM is the most accurate model. Now we'd like
+# to get the accuracy of the model with the validation set.
+
+# *** It is valuable to keep a validation set just in case you made a slip
+#     during training, such as an overfitting to the traing set or a data leak.
+
+model = SVC(gamma = 'auto')
+model.fit(X_train,Y_train)
+predictions = model.predict(X_validation)
 
 
-
-
-
-
-
-
-
-
-
-
+# Evaluate predictions
+print(accuracy_score(Y_validation, predictions))
+print(confusion_matrix(Y_validation, predictions))
+print(classification_report(Y_validation, predictions))
 
